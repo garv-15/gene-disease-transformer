@@ -5,6 +5,6 @@ dataorig/
 data/__pycache__/
 src/models/__pycache__/
 *.csv
-*.txt
+data/*.txt
 *.gmt
 *.tar
