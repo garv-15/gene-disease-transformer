@@ -1,0 +1,8 @@
+.venv/
+dataorig/
+data/__pycache__/
+src/models/__pycache__/
+*.csv
+*.txt
+*.gmt
+*.tar
