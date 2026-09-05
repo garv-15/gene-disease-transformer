@@ -2,21 +2,29 @@ from pathlib import Path
 import sys
 
 import torch
+import torch.nn.functional as F
 from torch.optim import AdamW
 
-sys.path.append(str(Path(__file__).resolve().parents[2]))
+sys.path.append(
+    str(Path(__file__).resolve().parents[2])
+)
 
-from data.gene_graph import load_gene_similarity
+from data.gene_similarity_training import (
+    load_gene_similarity_training_pairs,
+)
+
 from src.models.gene_encoder import GeneEncoder
 from src.models.gene_pretrainer import (
     GeneSimilarityDecoder,
-    gene_similarity_loss,
 )
 
+DATA_PATH = (
+    "data/gene_similarity_matrix_cosine.txt"
+)
 
-DATA_PATH = "data/gene_similarity_matrix_cosine.txt"
+POSITIVE_K = 32
+NEGATIVE_K = 32
 
-TOP_K = 32
 EMBEDDING_DIM = 128
 HEADS = 4
 NUM_LAYERS = 3
@@ -27,30 +35,17 @@ EPOCHS = 100
 
 
 def main():
-    if torch.backends.mps.is_available():
-        device = torch.device("mps")
-    elif torch.cuda.is_available():
-        device = torch.device("cuda")
-    else:
-        device = torch.device("cpu")
-
+    device = torch.device(torch.accelerator.current_accelerator() if torch.accelerator.is_available() else "cpu")
     print(f"Using device: {device}")
-
-    # --------------------------------------------------
-    # Load biological gene graph
-    # --------------------------------------------------
-
-    genes, edge_index, edge_weight = load_gene_similarity(
+    
+    (genes, edge_index, edge_weight,) = load_gene_similarity_training_pairs(
         DATA_PATH,
-        top_k=TOP_K,
+        positive_k=POSITIVE_K,
+        negative_k=NEGATIVE_K,
     )
 
     edge_index = edge_index.to(device)
     edge_weight = edge_weight.to(device)
-
-    # --------------------------------------------------
-    # Model
-    # --------------------------------------------------
 
     encoder = GeneEncoder(
         num_genes=len(genes),
@@ -71,28 +66,25 @@ def main():
         weight_decay=WEIGHT_DECAY,
     )
 
-    # --------------------------------------------------
-    # Training
-    # --------------------------------------------------
-
     encoder.train()
     decoder.train()
 
+    checkpoint_dir = Path("checkpoints")
+    checkpoint_dir.mkdir(exist_ok=True)
+
     for epoch in range(1, EPOCHS + 1):
-
         optimizer.zero_grad()
-
         gene_embeddings, _ = encoder(
             edge_index,
             edge_weight,
         )
-
+        
         predicted_similarity = decoder(
             gene_embeddings,
             edge_index,
         )
 
-        loss = gene_similarity_loss(
+        loss = F.mse_loss(
             predicted_similarity,
             edge_weight,
         )
@@ -104,37 +96,53 @@ def main():
             + list(decoder.parameters()),
             max_norm=1.0,
         )
-
         optimizer.step()
-
         if epoch == 1 or epoch % 10 == 0:
             print(
                 f"Epoch {epoch:03d}/{EPOCHS} "
                 f"| Loss: {loss.item():.6f}"
             )
+        encoder.eval()
+        with torch.no_grad():
+            gene_embeddings, attentions = encoder(
+                edge_index,
+                edge_weight,
+            )
+        torch.save(
+            {
+                "genes": genes,
+                "embeddings": gene_embeddings.cpu(),
+                "embedding_dim": EMBEDDING_DIM,
+            },
+            checkpoint_dir / "gene_embeddings.pt",
+        )
 
-    # Save trained encoder
+    checkpoint_path = (
+        checkpoint_dir
+        / "gene_encoder.pt"
+    )
 
-    checkpoint_dir = Path("checkpoints")
-    checkpoint_dir.mkdir(exist_ok=True)
-
-    checkpoint_path = checkpoint_dir / "gene_encoder.pt"
-
-    torch.save(
-        {
+    torch.save({
             "genes": genes,
-            "encoder_state_dict": encoder.state_dict(),
-            "decoder_state_dict": decoder.state_dict(),
-            "embedding_dim": EMBEDDING_DIM,
-            "heads": HEADS,
-            "num_layers": NUM_LAYERS,
-            "top_k": TOP_K,
+            "encoder_state_dict":
+                encoder.state_dict(),
+            "decoder_state_dict":
+                decoder.state_dict(),
+            "embedding_dim":
+                EMBEDDING_DIM,
+            "heads":
+                HEADS,
+            "num_layers":
+                NUM_LAYERS,
+            "positive_k":
+                POSITIVE_K,
+            "negative_k":
+                NEGATIVE_K,
         },
         checkpoint_path,
     )
 
-    print(f"\nSaved checkpoint: {checkpoint_path}")
-
+    print(f"\nSaved checkpoint: "f"{checkpoint_path}")
 
 if __name__ == "__main__":
     main()
