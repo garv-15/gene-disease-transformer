@@ -4,7 +4,6 @@ import sys
 import torch
 from torch.optim import AdamW
 
-# Allow running this file directly from the project root.
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from data.gene_graph import load_gene_similarity
@@ -114,9 +113,7 @@ def main():
                 f"| Loss: {loss.item():.6f}"
             )
 
-    # --------------------------------------------------
     # Save trained encoder
-    # --------------------------------------------------
 
     checkpoint_dir = Path("checkpoints")
     checkpoint_dir.mkdir(exist_ok=True)

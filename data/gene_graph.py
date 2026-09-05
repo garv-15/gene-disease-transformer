@@ -30,41 +30,31 @@ def load_gene_similarity(
             f"found {len(rows)}."
         )
 
-    # ---------------------------------------------------------
+    
     # Header
-    # ---------------------------------------------------------
+    
 
     # Row 0:
-    #
     # # | # | GeneSym | UNC13C | USP36 | AAK1 | ...
-    #
     gene_symbols = rows[0][3:]
-
     if len(gene_symbols) != EXPECTED_GENES:
         raise ValueError(
             f"Expected {EXPECTED_GENES} gene columns, "
             f"found {len(gene_symbols)}."
         )
 
-    # ---------------------------------------------------------
+    
     # Gene metadata
-    # ---------------------------------------------------------
+    
 
     # Row 1:
-    #
     # # | # | Ensemble Acc | ENSP... | ENSP... | ...
-    #
     # Row 2:
-    #
     # GeneSym | Ensemble Acc | GeneID/GeneID | 440279 | ...
-    #
-    # We don't need these for the similarity graph.
-    # ---------------------------------------------------------
+    
 
     data_start = 3
-
     data_rows = rows[data_start:data_start + EXPECTED_GENES]
-
     if len(data_rows) != EXPECTED_GENES:
         raise ValueError(
             f"Expected {EXPECTED_GENES} data rows, "
@@ -125,11 +115,9 @@ def load_gene_similarity(
         f"{matrix.shape}"
     )
 
-    # ---------------------------------------------------------
-    # Build sparse top-k graph
-    # ---------------------------------------------------------
+    # build sparse top-k graph
 
-    # Do not allow a gene to select itself.
+    # do not allow a gene to select itself.
     np.fill_diagonal(matrix, -np.inf)
 
     if not 1 <= top_k < EXPECTED_GENES:

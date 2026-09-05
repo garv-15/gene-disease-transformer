@@ -7,18 +7,11 @@ def load_gene_sets(
 ):
     """
     Load disease-centered gene sets from a GMT file.
-
-    Format:
-        Disease name <TAB> DOID <TAB> GENE1 <TAB> GENE2 ...
-
-    Returns
     -------
     set_names:
-        List of disease names.
-
+        List of disease names
     set_doids:
         List of Disease Ontology IDs.
-
     gene_set_membership:
         List of (gene_index, set_index) tuples.
     """
