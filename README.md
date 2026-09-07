@@ -180,6 +180,8 @@ dissimilar genes  → separated
 ```
 rather than potentially making too many genes similar.
 
+> checkpoint to be updated
+
 ## Not completed yet
 
 
@@ -308,6 +310,8 @@ attention weights retained
         ↓
 gene similarity pretraining
 ```
+
+// TODO: 
 
 The major remaining work starts with **disease encoder and gene–disease cross-attention/link-prediction system**.
 
