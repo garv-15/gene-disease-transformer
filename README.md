@@ -167,9 +167,8 @@ Checkpoint saved as:
 
 `checkpoints/gene_encoder.pt`
 
-## Not completed yet
 
-### 1. Improve gene pretraining
+### 5. Improve gene pretraining
 
 Current pretraining uses only the **top-32 similar genes** for every gene.
 
@@ -179,10 +178,12 @@ This needs negative/low-similarity pairs so the embedding space learns:
 similar genes     → close
 dissimilar genes  → separated
 ```
-
 rather than potentially making too many genes similar.
 
-### 2. Disease encoder
+## Not completed yet
+
+
+### 1. Disease encoder
 
 Still to implement:
 
@@ -200,7 +201,7 @@ using:
 
 `attribute_similarity_matrix_cosine.txt`
 
-### 3. Gene–disease prediction model
+### 2. Gene–disease prediction model
 
 Still to implement the core task:
 
@@ -222,7 +223,7 @@ Output should ultimately represent the complete:
 
 gene–disease score matrix.
 
-### 4. Correct handling of `NA`
+### 3. Correct handling of `NA`
 
 Training/evaluation must use:
 
@@ -234,7 +235,7 @@ NA → ignored
 
 The loss must therefore be masked rather than treating `NA` as zero.
 
-### 5. Data splitting / leakage prevention
+### 4. Data splitting / leakage prevention
 
 This is especially important because the GMT sets and edge file contain the same biological associations.
 
@@ -250,7 +251,7 @@ and potentially disease-family-held-out evaluation.
 
 The GMT information must not accidentally reveal the target association during validation/test.
 
-### 6. Biological module layer
+### 5. Biological module layer
 
 The disease-centered gene sets need to be incorporated into the architecture in a way that does not leak target labels.
 
@@ -266,7 +267,7 @@ Gene-set/module representation
 Disease representation
 ```
 
-### 7. Explanation system
+### 6. Explanation system
 
 Not implemented yet.
 
@@ -308,5 +309,5 @@ attention weights retained
 gene similarity pretraining
 ```
 
-The major remaining work starts with **robust gene pretraining**, followed by the **disease encoder and gene–disease cross-attention/link-prediction system**.
+The major remaining work starts with **disease encoder and gene–disease cross-attention/link-prediction system**.
 
