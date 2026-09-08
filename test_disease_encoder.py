@@ -1,21 +1,24 @@
 import torch
 
-from data.gene_graph import load_gene_similarity
-from src.models.gene_encoder import GeneEncoder
+from data.disease_graph import load_disease_similarity
+from src.models.disease_encoder import DiseaseEncoder
 
-
-genes, edge_index, edge_weight = load_gene_similarity(
-    "data/gene_similarity_matrix_cosine.txt",
-    top_k=32,
+diseases, edge_index, edge_weight = load_disease_similarity(
+    "data/attribute_similarity_matrix_cosine.txt",
+    top_k=16,
 )
 
-device = torch.device(torch.accelerator.current_accelerator() if torch.accelerator.is_available() else "cpu")
+device = torch.device(
+    torch.accelerator.current_accelerator()
+    if torch.accelerator.is_available()
+    else "cpu"
+)
 
 edge_index = edge_index.to(device)
 edge_weight = edge_weight.to(device)
 
-model = GeneEncoder(
-    num_genes=len(genes),
+model = DiseaseEncoder(
+    num_diseases=len(diseases),
     embedding_dim=128,
     heads=4,
     num_layers=3,
@@ -24,13 +27,13 @@ model = GeneEncoder(
 model.eval()
 
 with torch.no_grad():
-    gene_embeddings, attentions = model(
+    disease_embeddings, attentions = model(
         edge_index,
         edge_weight,
     )
 
 print("Device:", device)
-print("Gene embeddings:", gene_embeddings.shape)
+print("Disease embeddings:", disease_embeddings.shape)
 print("Number of attention layers:", len(attentions))
 
 for i, attention in enumerate(attentions):
